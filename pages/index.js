@@ -6,7 +6,6 @@ import Footer from "../components/Footer";
 
 export default function Home(props) {
   const { session } = props;
-  const uid = session?.user?.id?.toString();
 
   return (
     <div className="flex flex-col max-w-2xl m-auto h-full min-h-screen bg-[#38a6b5] justify-between">
@@ -20,8 +19,9 @@ export default function Home(props) {
           (
             <div>
               <div>
-                Title of thingy
+                Title of thingy, click to change
               </div>
+
             </div>
           ) : (
             <div>
