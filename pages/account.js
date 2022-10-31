@@ -3,48 +3,89 @@ import { getSession } from "next-auth/react";
 import { useRouter } from 'next/router'
 import Footer from "../components/Footer";
 import { fetch_db, savePref } from "../fb/Firebase";
-import { collection, doc, addDoc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, doc, addDoc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { getDate } from "../utils/utils";
 import { useState } from 'react';
 
 export default function Account(props) {
 	const { session, data } = props;
 	const router = useRouter();
-	const [movie, setMovie] = useState(data["movie"]);
-	const [video, setVideo] = useState(data["video"]);
-	const [media, setMedia] = useState(data["media"]);
-	const [games, setGames] = useState(data["games"]);
+	const [movieLimit, setMovieLimit] = useState(data["movieLimit"]);
+	const [videoLimit, setVideoLimit] = useState(data["videoLimit"]);
+	const [mediaLimit, setMediaLimit] = useState(data["mediaLimit"]);
+	const [gamesLimit, setGamesLimit] = useState(data["gamesLimit"]);
 
 	const editMovie = async (e) => {
 		let time = e.target.value;
-		setMovie(time);
+		setMovieLimit(time);
 	}
 	const editVideo = async (e) => {
 		let time = e.target.value;
-		setVideo(time);
+		setVideoLimit(time);
 	}
 	const editMedia = async (e) => {
 		let time = e.target.value;
-		setMedia(time);
+		setMediaLimit(time);
 	}
 	const editGames = async (e) => {
 		let time = e.target.value;
-		setGames(time);
+		setGamesLimit(time);
 	}
 	const setData = async () => {
 		const uid = session.user.id.toString();
-		data.movie = movie;
-		data.video = video;
-		data.media = media;
-		data.games = games;
-		let db = fetch_db();
-		let docRef = doc(db, "users", uid);
-		console.log("asdf");
-		await setDoc(docRef, data).then(() => {
-			console.log("fdsa");
-		}).catch((err) => {
-			console.error(err);
-		})
+		// something
+		await fetch("./api/update", {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        user: uid,
+        update: {
+          key: "movieLimit",
+          value: parseFloat(movieLimit)
+        }
+      })
+    });
+		await fetch("./api/update", {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        user: uid,
+        update: {
+          key: "videoLimit",
+          value: parseFloat(videoLimit)
+        }
+      })
+    });
+		await fetch("./api/update", {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        user: uid,
+        update: {
+          key: "mediaLimit",
+          value: parseFloat(mediaLimit)
+        }
+      })
+    });
+		await fetch("./api/update", {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        user: uid,
+        update: {
+          key: "gamesLimit",
+          value: parseFloat(gamesLimit)
+        }
+      })
+    });
 	}
 	return (
 		<div>
@@ -56,10 +97,10 @@ export default function Account(props) {
 						</div>
 						<div className="pt-2 pb-4 bg-blue-200">
 							<div className="mt-2 mb-1 text-lg">Change Daily Limits</div>
-							<div className="my-2">TV/Movies:&nbsp;&nbsp;&nbsp;<input type={"number"} className="text-black p-1 w-8" value={movie} onChange={editMovie} /> hrs</div>
-							<div className="my-2">Videos:&nbsp;&nbsp;&nbsp;<input type={"number"} className="text-black p-1 w-8" value={video} onChange={editVideo} /> hrs</div>
-							<div className="my-2">Social Media:&nbsp;&nbsp;&nbsp;<input type={"number"} className="text-black p-1 w-8" value={media} onChange={editMedia} /> hrs</div>
-							<div className="my-2">Video Games:&nbsp;&nbsp;&nbsp;<input type={"number"} className="text-black p-1 w-8" value={games} onChange={editGames} /> hrs</div>
+							<div className="my-2">TV/Movies:&nbsp;&nbsp;&nbsp;<input type={"number"} className="text-black p-1 w-10 text-center border-b-2 border-slate-700" value={movieLimit} onChange={editMovie} /> hrs</div>
+							<div className="my-2">Videos:&nbsp;&nbsp;&nbsp;<input type={"number"} className="text-black p-1 w-10 text-center border-b-2 border-slate-700" value={videoLimit} onChange={editVideo} /> hrs</div>
+							<div className="my-2">Social Media:&nbsp;&nbsp;&nbsp;<input type={"number"} className="text-black p-1 w-10 text-center border-b-2 border-slate-700" value={mediaLimit} onChange={editMedia} /> hrs</div>
+							<div className="my-2">Video Games:&nbsp;&nbsp;&nbsp;<input type={"number"} className="text-black p-1 w-10 text-center border-b-2 border-slate-700" value={gamesLimit} onChange={editGames} /> hrs</div>
 							<button onClick={async () => { await setData() }} className="ml-3 px-2 py-1.5 my-2 text-white rounded bg-blue-600 shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Save</button>
 						</div>
 					</div>
@@ -95,20 +136,17 @@ export async function getServerSideProps(context) {
 		};
 	}
 	let data = docSnap.data();
-	if (!("movie" in data)) {
-		data["movie"] = 0;
-		data["video"] = 0;
-		data["media"] = 0;
-		data["games"] = 0;
-		data["movieCleanSince"] = getDate();
-		data["videoCleanSince"] = getDate();
-		data["mediaCleanSince"] = getDate();
-		data["gamesCleanSince"] = getDate();
-		data["movieTimeUsed"] = 0;
-		data["videoTimeUsed"] = 0;
-		data["mediaTimeUsed"] = 0;
-		data["gamesTimeUsed"] = 0;
-		await setDoc(docRef, data);
+	if (!("movieLimit" in data)) {
+		await updateDoc(docRef, {
+			movieLimit: 0,
+			videoLimit: 0,
+			mediaLimit: 0,
+			gamesLimit: 0,
+			movieCleanSince: getDate(),
+			videoCleanSince: getDate(),
+			mediaCleanSince: getDate(),
+			gamesCleanSince: getDate(),
+		});
 	}
 
 	return {

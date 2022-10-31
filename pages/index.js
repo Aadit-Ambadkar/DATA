@@ -4,42 +4,64 @@ import Link from "next/link"
 import { signIn, signOut, useSession } from "next-auth/react";
 import Footer from "../components/Footer";
 import { fetch_db } from "../fb/Firebase";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { getDate, subtractDates } from "../utils/utils";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import { getDate, getSanitizedDate, subtractDates } from "../utils/utils";
+import { useRouter } from 'next/router'
+import Bar from "../components/Bar";
 
 export default function Home(props) {
   const { session, data } = props;
-
+  const uid = session?.user.id.toString();
   const [index, setIndex] = useState(0);
   const idList = ["movie", "video", "media", "games"];
   const nameList = ["TV/Movies", "Videos/Shorts", "Social Media", "Video Games"];
-  
+  const router = useRouter();
+
   const changeIndex = () => {
     setIndex((index + 1) % 4);
   }
-  
+
   const getStreak = () => {
     let today = getDate();
     let prev = data[`${idList[index]}CleanSince`];
     return subtractDates(today, prev);
   }
 
-  const logRef = useRef();
-  const logTime = () => {
+  const [logValue, setLogValue] = useState(0);
+  const onUpdateLogValue = (e) => {
+    let value = e.target.value;
+    setLogValue(value);
+  }
+  const logTime = async () => {
     /* This is really important as a function
      * First update the time spent today, and send that to the api
      * Then check if we have used more than the allotted limit
      * If so, reset the days clean since, otherwise we're good
     */
-    console.log(logRef.current.value);
+    data[`${getSanitizedDate()}${idList[index]}`] = parseInt(data[`${getSanitizedDate()}${idList[index]}`]) + parseInt(logValue);
+    await fetch("./api/update", {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        user: uid,
+        update: {
+          key: `${getSanitizedDate()}${idList[index]}`,
+          value: data[`${getSanitizedDate()}${idList[index]}`]
+        }
+      })
+    });
+    setLogValue(0);
+    // console.log(logRef.current.value);
   }
 
   return (
-    <div className="flex flex-col max-w-2xl m-auto h-full min-h-screen bg-blue-100 justify-between">
+    <div className="flex flex-col max-w-[500px] m-auto h-full min-h-screen bg-blue-50 justify-between">
 
       <div className="text-center text-black">
-        
-        <div className={`${session ? "text-lg py-3" : "text-2xl py-5" } bg-blue-700 text-white px-1`}>
+
+        <div className={`${session ? "text-lg py-3" : "text-2xl py-5"} bg-blue-700 text-white px-1`}>
           Digital Addiction Tracker App
         </div>
 
@@ -49,15 +71,25 @@ export default function Home(props) {
               <div className="mb-6 py-2 bg-blue-200">
                 <a onClick={changeIndex} className="cursor-pointer">{nameList[index]} (Tap To Change)</a>
               </div>
+              <div className="mb-6">
+                <Bar curValue={data[`${getSanitizedDate()}${idList[index]}`]} max={data[`${idList[index]}Limit`] * 60}/>
+              </div>
               <div className="bg-white mx-14 mb-6 py-2 rounded-xl shadow-xl">
                 <div>
                   Time Spent Today:
                 </div>
                 <div className="text-xl font-bold">
-                  {data[`${idList[index]}TimeUsed`]} min / {data[idList[index]] * 60} min
+                  {data[`${getSanitizedDate()}${idList[index]}`]} min / {data[`${idList[index]}Limit`] * 60} min
                 </div>
               </div>
-
+              <div className="bg-white mx-14 mb-6 py-2 rounded-xl shadow-xl">
+                <div>Log Additional Time Spent</div>
+                <div className="text-xl font-bold">
+                  <input type={"number"} className="text-black p-1 w-8 text-center border-b-2 border-slate-700" min={0} defaultValue={0} value={logValue} onChange={onUpdateLogValue}/> mins
+                  <button onClick={logTime} className="ml-3 px-2 py-1.5 my-2 text-white rounded bg-blue-600 shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Log Time</button>
+                </div>
+              </div>
+              
               <div className="bg-white mx-14 mb-6 py-2 rounded-xl shadow-xl">
                 <div>
                   I've been clean for:
@@ -76,14 +108,7 @@ export default function Home(props) {
                 </div>
               </div>
 
-              <div className="bg-white mx-14 py-2 rounded-xl shadow-xl">
-                <div>Log Additional Time Spent</div>
-                <div className="text-xl font-bold">
-                  <input type={"number"} className="text-black p-1 w-8 text-center border-b-2 border-slate-700" min={0} defaultValue={0} ref={logRef}/> mins
-                  <button onClick={logTime} className="ml-3 px-2 py-1.5 my-2 text-white rounded bg-blue-600 shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Log Time</button>
-                </div>
 
-              </div>
             </div>
           ) : (
             <div className="font-bold px-10">
@@ -125,7 +150,7 @@ export async function getServerSideProps(context) {
   const uid = session.user.id.toString();
   let db = fetch_db();
   const docRef = doc(db, "users", uid);
-  const docSnap = await getDoc(docRef);
+  let docSnap = await getDoc(docRef);
   if (!docSnap.exists()) {
     return {
       props: {
@@ -134,20 +159,29 @@ export async function getServerSideProps(context) {
     };
   }
   let data = docSnap.data();
-  if (!("movie" in data)) {
-    data["movie"] = 0;
-    data["video"] = 0;
-    data["media"] = 0;
-    data["games"] = 0;
-    data["movieCleanSince"] = getDate();
-    data["videoCleanSince"] = getDate();
-    data["mediaCleanSince"] = getDate();
-    data["gamesCleanSince"] = getDate();
-    data["movieTimeUsed"] = 0;
-    data["videoTimeUsed"] = 0;
-    data["mediaTimeUsed"] = 0;
-    data["gamesTimeUsed"] = 0;
-    await setDoc(docRef, data);
+  if (!("movieLimit" in data)) {
+    await updateDoc(docRef, {
+      movieLimit: 0,
+      videoLimit: 0,
+      mediaLimit: 0,
+      gamesLimit: 0,
+      movieCleanSince: getDate(),
+      videoCleanSince: getDate(),
+      mediaCleanSince: getDate(),
+      gamesCleanSince: getDate(),
+    });
+    docSnap = (await getDoc(docRef));
+    data = docSnap.data();
+  }
+  if (!(`${getSanitizedDate()}movie` in data)) {
+    let obj = {};
+    obj[`${getSanitizedDate()}movie`] = 0;
+    obj[`${getSanitizedDate()}video`] = 0;
+    obj[`${getSanitizedDate()}media`] = 0;
+    obj[`${getSanitizedDate()}games`] = 0;
+    await updateDoc(docRef, obj);
+    docSnap = (await getDoc(docRef));
+    data = docSnap.data();
   }
   return {
     props: {
