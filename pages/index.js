@@ -33,11 +33,6 @@ export default function Home(props) {
     setLogValue(value);
   }
   const logTime = async () => {
-    /* This is really important as a function
-     * First update the time spent today, and send that to the api
-     * Then check if we have used more than the allotted limit
-     * If so, reset the days clean since, otherwise we're good
-    */
     data[`${getSanitizedDate()}${idList[index]}`] = parseInt(data[`${getSanitizedDate()}${idList[index]}`]) + parseInt(logValue);
     await fetch("./api/update", {
       method: "POST",
@@ -53,11 +48,27 @@ export default function Home(props) {
       })
     });
     setLogValue(0);
+    if (data[`${getSanitizedDate()}${idList[index]}`] > data[`${idList[index]}Limit`] * 60) {
+      data[`${idList[index]}CleanSince`] = getDate();
+      await fetch("./api/update", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user: uid,
+          update: {
+            key: `${idList[index]}CleanSince`,
+            value: data[`${idList[index]}CleanSince`]
+          }
+        })
+      });
+    }
     // console.log(logRef.current.value);
   }
 
   return (
-    <div className="flex flex-col max-w-[500px] m-auto h-full min-h-screen bg-blue-50 justify-between">
+    <div className="flex flex-col max-w-[500px] m-auto h-full min-h-screen bg-[#F8FAFF] justify-between">
 
       <div className="text-center text-black">
 
@@ -68,50 +79,39 @@ export default function Home(props) {
         {session ?
           (
             <div>
-              <div className="mb-6 py-2 bg-blue-200">
+              <div className="text-blue-800 mb-6 py-2 bg-blue-200">
                 <a onClick={changeIndex} className="cursor-pointer">{nameList[index]} (Tap To Change)</a>
               </div>
               <div className="mb-6">
                 <Bar curValue={data[`${getSanitizedDate()}${idList[index]}`]} max={data[`${idList[index]}Limit`] * 60}/>
               </div>
-              <div className="bg-white mx-14 mb-6 py-2 rounded-xl shadow-xl">
-                <div>
+              <div className="bg-white mx-14 mb-6 py-2 rounded-xl shadow-md">
+                <div className="text-lg font-semibold text-gray-800">
                   Time Spent Today:
                 </div>
-                <div className="text-xl font-bold">
+                <div className="text-xl font-bold text-blue-600">
                   {data[`${getSanitizedDate()}${idList[index]}`]} min / {data[`${idList[index]}Limit`] * 60} min
                 </div>
               </div>
-              <div className="bg-white mx-14 mb-6 py-2 rounded-xl shadow-xl">
-                <div>Log Additional Time Spent</div>
-                <div className="text-xl font-bold">
-                  <input type={"number"} className="text-black p-1 w-8 text-center border-b-2 border-slate-700" min={0} defaultValue={0} value={logValue} onChange={onUpdateLogValue}/> mins
+              <div className="bg-white mx-14 mb-6 py-6 px-2 rounded-xl shadow-md">
+                <div className="text-lg font-semibold text-gray-800">Log Additional Time Spent</div>
+                <div className="text-xl font-bold text-blue-600">
+                  <input type={"number"} className=" p-1 w-8 text-center border-b-2 border-blue-600" min={0} defaultValue={0} value={logValue} onChange={onUpdateLogValue}/> mins
                   <button onClick={logTime} className="ml-3 px-2 py-1.5 my-2 text-white rounded bg-blue-600 shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Log Time</button>
                 </div>
               </div>
               
-              <div className="bg-white mx-14 mb-6 py-2 rounded-xl shadow-xl">
-                <div>
+              <div className="bg-white mx-14 mb-6 py-2 rounded-xl shadow-md">
+                <div className="text-lg font-semibold text-gray-800">
                   I've been clean for:
                 </div>
-                <div className="text-xl font-bold">
+                <div className="text-xl font-bold text-blue-600">
                   {getStreak()} day{getStreak() == 1 ? "" : "s"}
                 </div>
               </div>
-
-              <div className="bg-white mx-14 mb-16 py-2 rounded-xl shadow-xl">
-                <div>
-                  I've been clean since:
-                </div>
-                <div className="text-xl font-bold">
-                  {data[`${idList[index]}CleanSince`]}
-                </div>
-              </div>
-
-
             </div>
           ) : (
-            <div className="font-bold px-10">
+            <div className="font-bold px-8">
               <div className="mt-24">
                 DATA is the first Tracking App specifically designed for recovering from a Digital Addiction.
               </div>
@@ -161,10 +161,10 @@ export async function getServerSideProps(context) {
   let data = docSnap.data();
   if (!("movieLimit" in data)) {
     await updateDoc(docRef, {
-      movieLimit: 0,
-      videoLimit: 0,
-      mediaLimit: 0,
-      gamesLimit: 0,
+      movieLimit: 1,
+      videoLimit: 1,
+      mediaLimit: 1,
+      gamesLimit: 1,
       movieCleanSince: getDate(),
       videoCleanSince: getDate(),
       mediaCleanSince: getDate(),
