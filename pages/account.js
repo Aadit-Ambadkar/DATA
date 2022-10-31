@@ -166,7 +166,7 @@ export default function Account(props) {
 							</div>
 						</div>
 						<div className="bg-white mx-14 mb-6 mt-6 py-5 px-5 rounded-xl shadow-md">
-							<div className="mb-2 text-xl">Today's Total Usage</div>
+							<div className="mb-2 text-xl">Today&apos;s Total Usage</div>
 							<Bar
 								curValue={
 									data[`${getSanitizedDate()}movie`] +

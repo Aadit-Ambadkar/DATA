@@ -96,14 +96,14 @@ export default function Home(props) {
               <div className="bg-white mx-14 mb-6 py-6 px-2 rounded-xl shadow-md">
                 <div className="text-lg font-semibold text-gray-800">Log Additional Time Spent</div>
                 <div className="text-xl font-bold text-blue-600">
-                  <input type={"number"} className=" p-1 w-8 text-center border-b-2 border-blue-600" min={0} defaultValue={0} value={logValue} onChange={onUpdateLogValue}/> mins
+                  <input type={"number"} className=" p-1 w-8 text-center border-b-2 border-blue-600" min={0} value={logValue} onChange={onUpdateLogValue}/> mins
                   <button onClick={logTime} className="ml-3 px-2 py-1.5 my-2 text-white rounded bg-blue-600 shadow-md hover:bg-blue-700 hover:shadow-lg focus:bg-blue-700 focus:shadow-lg focus:outline-none focus:ring-0 active:bg-blue-800 active:shadow-lg transition duration-150 ease-in-out">Log Time</button>
                 </div>
               </div>
               
               <div className="bg-white mx-14 mb-6 py-2 rounded-xl shadow-md">
                 <div className="text-lg font-semibold text-gray-800">
-                  I've been clean for:
+                  I&apos;ve been clean for:
                 </div>
                 <div className="text-xl font-bold text-blue-600">
                   {getStreak()} day{getStreak() == 1 ? "" : "s"}
