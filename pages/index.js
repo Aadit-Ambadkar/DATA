@@ -11,6 +11,7 @@ import Bar from "../components/Bar";
 
 export default function Home(props) {
   const { session, data } = props;
+  console.log(data);
   const uid = session?.user.id.toString();
   const [index, setIndex] = useState(0);
   const idList = ["movie", "video", "media", "games"];
