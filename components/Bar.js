@@ -7,7 +7,7 @@ export default function Radial(props) {
 	const { curValue, max } = props;
 	let pbValue = curValue
 	if (pbValue == 0) {
-		pbValue = 0.01 * max;
+		pbValue = 0.5;
 	}
 	return (
 		<div className="w-fit m-auto">
