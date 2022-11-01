@@ -17,5 +17,5 @@ export function getSanitizedDate() {
 export function subtractDates(s1, s2) {
     const d1 = new Date(s1);
     const d2 = new Date(s2);
-    return (d1.getDate()-d2.getDate());
+    return ((d1-d2)/1000/60/60/24);
 }
