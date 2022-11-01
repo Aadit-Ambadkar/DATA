@@ -1,6 +1,6 @@
 # DATA: Digital Addiction Tracking App
 
-Digital Addiction is an underrecognized mental illness which affects nearly 61% of all people with access to internet, a majority of whom are teens under the age of 18. In comparison only about 6% of adults are alcoholics. Apps like I am Sober for alcohol addictions exist, so why not for digital addiction? It's time to start battling digital addiction.
+Digital Addiction is an underrecognized mental illness which affects nearly 61% of all people with access to internet, a majority of whom are teens under the age of 18. In comparison only about 5% of adults are alcoholics. Apps like I am Sober for alcohol addictions exist, so why not for digital addiction? It's time to start battling digital addiction.
 
 DATA serves as a recovery tracker app and a combatant app, offering an inbuilt rewards system which (provided funding which I don't have) can scale easily to monetary rewards. Like most recovery apps, DATA relies on user honesty, which means it can't be used as a third-party tracking app, and thus protects user privacy.
 
